@@ -4,6 +4,7 @@ from flask import request
 from flask import Response
 from Flask.database import get_db
 
+APIKEY = "e4071d45fd8647babcc6be35102ae515"
 User = Blueprint('User', __name__)
 
 @User.route("/",  methods=['POST'])
@@ -16,6 +17,7 @@ def InitializeDatabase():
     stateData = json.load(open(dir_path + '/' + 'StateInfo.json'))
     stateAbbr = json.load(open(dir_path + '/' + 'StateAbbr.json'))
 
+    # Load in states
     for i in range (len(stateData)):
         fips = int(stateData[i]['fips'])
         name = str(stateAbbr[stateData[i]['state']])
@@ -24,22 +26,31 @@ def InitializeDatabase():
         db.execute(query, (fips, name, abbr))
         db.commit()
 
+    # Load counties
+    for i in range (len(countyData)):
+        fips = int(countyData[i]['fips'])
+        name = str(countyData[i]['county'])
+        state_abbr = str(countyData[i]['state'])
+        query = "INSERT INTO county (fips, [name], state_abbr) VALUES (?, ?, ?)"
+        db.execute(query, (fips, name, state_abbr))
+        db.commit()
+
+
     for i in range (len(countyData)):
         currVaccine = countyData[i]['metrics']['vaccinationsCompletedRatio']
         currDeaths = countyData[i]['actuals']['deaths']
         currCases = countyData[i]['actuals']['cases']
-        fips = int(countyData[i]['fips'])
-        name = str(countyData[i]['county'])
-        state_abbr = str(countyData[i]['state'])
+        date = int(countyData[i]['fips'])
+        county_fips = int(countyData[i]['fips'])
         pop = int(countyData[i]['population'])
         vacc_rate = currVaccine if isinstance(currVaccine, float) else None
         cases = currCases if isinstance(currCases, int) else None
         deaths = currDeaths if isinstance(currDeaths, int) else None
-        query = "INSERT INTO county (fips, [name], state_abbr, [population], vaccine_rate, cases, deaths) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        db.execute(query, (fips, name, state_abbr, pop, vacc_rate, cases, deaths))
+        query = "INSERT INTO county_statistic ([date], county_fips, [population], vaccine_rate, cases, deaths) VALUES (?, ?, ?, ?, ?, ?)"
+        db.execute(query, (date, county_fips, pop, vacc_rate, cases, deaths))
         db.commit()
 
-    queryResult = db.execute("SELECT * FROM county").fetchall()
+    queryResult = db.execute("SELECT * FROM county_statistic").fetchall()
     jsonQuery = []
     currDict = {}
 

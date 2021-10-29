@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS favorite;
 DROP TABLE IF EXISTS county;
+DROP TABLE IF EXISTS county_statistic;
 DROP TABLE IF EXISTS [state];
 
 CREATE TABLE user (
@@ -21,11 +22,17 @@ CREATE TABLE county (
   fips INTEGER PRIMARY KEY,
   [name] TEXT NOT NULL,
   state_abbr INTEGER NOT NULL,
+  FOREIGN KEY(state_abbr) REFERENCES [state](abbreviation)
+);
+
+CREATE TABLE county_statistic (
+  [date] DATE PRIMARY KEY,
+  county_fips INTEGER,
   [population] INTEGER,
   vaccine_rate FLOAT,
   cases INTEGER,
   deaths INTEGER,
-  FOREIGN KEY(state_abbr) REFERENCES [state](abbreviation)
+  FOREIGN KEY(county_fips) REFERENCES county(fips)
 );
 
 CREATE TABLE [state] (
