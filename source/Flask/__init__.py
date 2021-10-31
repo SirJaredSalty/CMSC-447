@@ -31,8 +31,8 @@ def create_app(test_config=None):
     from . import database
     database.init_app(app)
 
-    # Create a blueprint for the User API route calls
+    # Create a blueprint for the County API route calls
     from . import backendAPI
-    app.register_blueprint(backendAPI.User)
+    app.register_blueprint(backendAPI.County)
 
     return app

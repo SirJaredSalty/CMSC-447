@@ -1,25 +1,26 @@
 import json, os
+import urllib.request as ur
+from datetime import date
 from flask import Flask, Blueprint
 from flask import request
 from flask import Response
 from Flask.database import get_db
 
-APIKEY = "e4071d45fd8647babcc6be35102ae515"
-User = Blueprint('User', __name__)
+County = Blueprint('County', __name__)
 
-@User.route("/",  methods=['POST'])
+@County.route("/Initialize",  methods=['POST'])
 def InitializeDatabase():
     db = get_db()
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    # Query is dynamic depending on the input given to search a user/users
+    # Get JSON data for counties and states
     countyData = json.load(open(dir_path + '/' + 'CountyInfo.json'))
     stateData = json.load(open(dir_path + '/' + 'StateInfo.json'))
     stateAbbr = json.load(open(dir_path + '/' + 'StateAbbr.json'))
 
     # Load in states
     for i in range (len(stateData)):
-        fips = int(stateData[i]['fips'])
+        fips = str(stateData[i]['fips'])
         name = str(stateAbbr[stateData[i]['state']])
         abbr = str(stateData[i]['state'])
         query = "INSERT INTO [state] (fips, [name], abbreviation) VALUES (?, ?, ?)"
@@ -28,84 +29,97 @@ def InitializeDatabase():
 
     # Load counties
     for i in range (len(countyData)):
-        fips = int(countyData[i]['fips'])
+        fips = str(countyData[i]['fips'])
         name = str(countyData[i]['county'])
         state_abbr = str(countyData[i]['state'])
-        query = "INSERT INTO county (fips, [name], state_abbr) VALUES (?, ?, ?)"
-        db.execute(query, (fips, name, state_abbr))
-        db.commit()
-
-
-    for i in range (len(countyData)):
-        currVaccine = countyData[i]['metrics']['vaccinationsCompletedRatio']
-        currDeaths = countyData[i]['actuals']['deaths']
-        currCases = countyData[i]['actuals']['cases']
-        date = int(countyData[i]['fips'])
-        county_fips = int(countyData[i]['fips'])
         pop = int(countyData[i]['population'])
-        vacc_rate = currVaccine if isinstance(currVaccine, float) else None
-        cases = currCases if isinstance(currCases, int) else None
-        deaths = currDeaths if isinstance(currDeaths, int) else None
-        query = "INSERT INTO county_statistic ([date], county_fips, [population], vaccine_rate, cases, deaths) VALUES (?, ?, ?, ?, ?, ?)"
-        db.execute(query, (date, county_fips, pop, vacc_rate, cases, deaths))
+        query = "INSERT INTO county (fips, [name], state_abbr, [population]) VALUES (?, ?, ?, ?)"
+        db.execute(query, (fips, name, state_abbr, pop))
         db.commit()
 
-    queryResult = db.execute("SELECT * FROM county_statistic").fetchall()
-    jsonQuery = []
-    currDict = {}
-
-    # Convert the query to a JSON array
-    for result in queryResult:
-        currDict["fips"] = result[0]
-        currDict["name"] = result[1]
-        currDict["state_abbr"] = result[2]
-        currDict["population"] = result[3]
-        currDict["vaccine_rate"] = result[4]
-        currDict["cases"] = result[5]
-        currDict["deaths"] = result[6]
-        jsonQuery.append(currDict.copy())
-        currDict.clear()
-
-    return json.dumps(jsonQuery)
+    return Response(status = 200)
 
 
-# Route that will Update/Put data of an existing user depending on the passed ID.
-@User.route("/<string:userID>",  methods=['PUT'])
-def UpdateUser(userID):
+@County.route("/CountyStats",  methods=['POST'])
+def UpdateCountyStats():
     db = get_db()
 
-    # Check if the ID given exists in the database
-    if(len(db.execute("SELECT * FROM user WHERE id = "  + str(userID).strip()).fetchall()) == 0):
+    # Load county's Covid-19 statistics
+    counties = db.execute("SELECT * FROM county").fetchall()
+    for i in range (len(counties)):
+        county_fips = str(counties[i]['fips'])
+        stat = db.execute("SELECT * FROM county_statistic where county_fips = ?", (county_fips, )).fetchall()
+        print(i, county_fips)
+
+        if len(stat) == 0:
+            url = "https://api.covidactnow.org/v2/county/" + county_fips + ".timeseries.json?apiKey=e4071d45fd8647babcc6be35102ae515"
+            countyStats = json.load(ur.urlopen(url))
+
+            # Get stats for last 28 days
+            for j in range (29, 0, -1):
+                index = len(countyStats['actualsTimeseries']) - j
+                currVaccineComplete = countyStats['actualsTimeseries'][index]['vaccinationsCompleted']
+                currVaccineInitiated = countyStats['actualsTimeseries'][index]['vaccinationsInitiated']
+                currDeaths = countyStats['actualsTimeseries'][index]['deaths']
+                currCases = countyStats['actualsTimeseries'][index]['cases']
+                date = countyStats['actualsTimeseries'][index]['date']
+                vacc_complete = currVaccineComplete if isinstance(currVaccineComplete, int) else None
+                vacc_initiated = currVaccineInitiated if isinstance(currVaccineInitiated, int) else None
+                cases = currCases if isinstance(currCases, int) else None
+                deaths = currDeaths if isinstance(currDeaths, int) else None
+                query = "INSERT INTO county_statistic ([date], county_fips, vaccines_initiated, vaccines_complete, cases, deaths) VALUES (?, ?, ?, ?, ?, ?)"
+                db.execute(query, (date, county_fips, vacc_initiated, vacc_complete, cases, deaths))
+                db.commit()
+
+    return Response(status = 200)
+
+
+@County.route("/County/<string:FIPS>",  methods=['GET'])
+def GetCountyStats(FIPS):
+    db = get_db()
+
+    queryResult = db.execute("SELECT * FROM county_statistic INNER JOIN county ON county_statistic.county_fips = county.fips WHERE county_fips = ?", (FIPS, )).fetchall()
+    if(len(queryResult) == 0):
         return Response(status = 404)
-    
-    # Dynamically set new attributes to a user depending on what information wants to be change.
-    query = "UPDATE user SET "
-    if(request.args.get("name").strip() != ""):
-        query += ("full_name = '" + request.args.get("name").strip() + "', ")
 
-    if(request.args.get("id").strip() != ""):
-        query += ("id = " + request.args.get("id").strip() + ", ")
-
-    if(request.args.get("points").strip() != ""):
-        query += ("points = " + request.args.get("points").strip() + ", ")
-
-    # Run the query and update the user
-    query = query[:-2]
-    query += (" WHERE id = " + str(userID).strip())
-    db.execute(query)
-    db.commit() 
-
-    # Execute another query to retrieve an updated list of users after the Update/Put
-    queryResult = db.execute("SELECT * FROM user").fetchall()
     jsonQuery = []
     currDict = {}
 
     # Convert the query to a JSON array
     for result in queryResult:
-        currDict["id"] = result[0]
-        currDict["full_name"] = result[1]
-        currDict["points"] = result[2]
+        currDict["date"] = str(result[0])
+        currDict["county_fips"] = result[1]
+        currDict["vaccines_initiated"] = result[2]
+        currDict["vaccines_complete"] = result[3]
+        currDict["cases"] = result[4]
+        currDict["deaths"] = result[5]
+        currDict["name"] = result[7]
+        currDict["state"] = result[8]
+        currDict["population"] = result[9]
         jsonQuery.append(currDict.copy())
         currDict.clear()
 
     return json.dumps(jsonQuery)
+
+
+@County.route("/State/<string:FIPS>",  methods=['GET'])
+def GetState(FIPS):
+    db = get_db()
+
+    queryResult = db.execute("SELECT * FROM state WHERE fips = ?", (FIPS, )).fetchall()
+    if(len(queryResult) == 0):
+        return Response(status = 404)
+
+    jsonQuery = []
+    currDict = {}
+
+    # Convert the query to a JSON array
+    for result in queryResult:
+        currDict["fips"] = str(result[0])
+        currDict["name"] = result[1]
+        currDict["abbr"] = result[2]
+        jsonQuery.append(currDict.copy())
+        currDict.clear()
+
+    return json.dumps(jsonQuery)
+

@@ -19,24 +19,26 @@ CREATE TABLE favorite (
 );
 
 CREATE TABLE county (
-  fips INTEGER PRIMARY KEY,
+  fips TEXT PRIMARY KEY,
   [name] TEXT NOT NULL,
   state_abbr INTEGER NOT NULL,
+  [population] INTEGER NOT NULL,
   FOREIGN KEY(state_abbr) REFERENCES [state](abbreviation)
 );
 
 CREATE TABLE county_statistic (
-  [date] DATE PRIMARY KEY,
-  county_fips INTEGER,
-  [population] INTEGER,
-  vaccine_rate FLOAT,
+  [date] DATE NOT NULL,
+  county_fips TEXT NOT NULL,
+  vaccines_initiated INTEGER,
+  vaccines_complete INTEGER,
   cases INTEGER,
   deaths INTEGER,
+  PRIMARY KEY([date], county_fips),
   FOREIGN KEY(county_fips) REFERENCES county(fips)
 );
 
 CREATE TABLE [state] (
-  fips INTEGER PRIMARY KEY,
+  fips TEXT PRIMARY KEY,
   [name] TEXT NOT NULL UNIQUE,
   abbreviation TEXT UNIQUE NOT NULL
 );
