@@ -4,6 +4,7 @@ import { countiesData } from '../searchbar/CountiesJS.js';
 var map = L.map('map').setView([37.8, -96], 4);
 var info = L.control();
 var geojson;
+var currSearch = null;
 
 function loadMap() {
     document.getElementsByClassName("leaflet-control-attribution leaflet-control")[0].remove();
@@ -35,6 +36,16 @@ function loadMap() {
     document.onmousemove = function(event) {
         event.target.id == "searchbarInput" ?  map.dragging.disable() : map.dragging.enable();
     }
+
+    document.getElementById("FIPS-input").addEventListener("input", function(e) {
+        if(currSearch)
+            currSearch.fireEvent('mouseout');
+            
+        let layer = geojson.getLayer(e.target.value);
+        layer.fireEvent('click');
+        layer.fireEvent('mouseover');
+        currSearch = layer;
+    });
 }
 
 function mapHover() {
@@ -54,7 +65,7 @@ function mapHover() {
         }
 
         else {
-            this._div.innerHTML = '<h4>Current Hovering:</h4>' + 'None';
+            this._div.innerHTML = '<h4>Currently Hovering:</h4>' + 'None';
         }
     };
 
@@ -124,6 +135,8 @@ function onEachFeature(feature, layer) {
         mouseout: resetHighlight,
         click: zoomToFeature
     });
+
+    layer._leaflet_id = feature.properties.GEO_ID.slice(9);
 }
 
 loadMap();

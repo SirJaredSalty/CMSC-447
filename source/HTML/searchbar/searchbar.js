@@ -4,7 +4,7 @@ import { countiesData } from './CountiesJS.js';
 function autocomplete(inp, arr) {
     // Execute a function when someone writes in the text field
     inp.addEventListener("input", function(event) {
-        var a, b, i, c = 0, val = this.value;
+        var a, b, d, i, c = 0, val = this.value;
     
         // Close any already open lists of autocompleted values
         closeAllLists();
@@ -32,13 +32,15 @@ function autocomplete(inp, arr) {
                 b.innerHTML = "<strong>" + arr[i].county.substr(0, val.length) + "</strong>";
                 b.innerHTML += arr[i].county.substr(val.length) + ", " + arr[i].state;
     
-                /*insert a input field that will hold the current array item's value:*/
-                b.innerHTML += "<input type='hidden' value='" + arr[i].county + "'>";
+                /*insert a input field that will hold the current FIPS code:*/
+                b.innerHTML += "<input type='hidden' value='" + arr[i].FIPS + "'>";
     
                 /*execute a function when someone clicks on the item value (DIV element):*/
                 b.addEventListener("click", function(e) {
                     // insert the value for the autocomplete text field
-                    inp.value = this.getElementsByTagName("input")[0].value;
+                    inp.value = "";
+                    document.getElementById("FIPS-input").value = this.getElementsByTagName("input")[0].value;
+                    document.getElementById("FIPS-input").dispatchEvent(new Event('input'));
                     closeAllLists();
                 });
     
@@ -67,7 +69,8 @@ for(let i = 0; i < countiesData.features.length; i++) {
             let LSAD = countiesData.features[i].properties.LSAD;
             countyJSON.push({"county": countiesData.features[i].properties.NAME + " " + 
                              LSAD.charAt(0).toUpperCase() + LSAD.slice(1), 
-                             "state": statesData.features[j].properties.name});
+                             "state": statesData.features[j].properties.name,
+                             "FIPS": countiesData.features[i].properties.GEO_ID.slice(9)});
             break;
         }
     }
