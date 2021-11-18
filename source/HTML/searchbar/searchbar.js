@@ -4,7 +4,7 @@ import { countiesData } from './CountiesJS.js';
 function autocomplete(inp, arr) {
     // Execute a function when someone writes in the text field
     inp.addEventListener("input", function(event) {
-        var a, b, d, i, c = 0, val = this.value;
+        var a, b, i, c = 0, val = this.value;
     
         // Close any already open lists of autocompleted values
         closeAllLists();
@@ -12,32 +12,32 @@ function autocomplete(inp, arr) {
             return false;
         }
     
-        /*create a DIV element that will contain the items (values):*/
+        // create a DIV element that will contain the items (values)
         a = document.createElement("DIV");
         a.setAttribute("id", "autocomplete-list");
     
-        /*append the DIV element as a child of the autocomplete container:*/
+        // Append the DIV element as a child of the autocomplete container
         this.parentNode.appendChild(a);
     
         // Loop for each matching county/state substring
         for (i = 0; i < arr.length; i++) {
-            /*check if the item starts with the same letters as the text field value:*/
-            if (arr[i].county.substr(0, val.length).toUpperCase() == val.toUpperCase() && c != 10) {
+            let searchStr = arr[i].county + ", " + arr[i].state;
+            // Check if the County/State starts with the same letters as the text field value
+            if (searchStr.substr(0, val.length).toUpperCase() == val.toUpperCase() && c != 10) {
                 c += 1;
     
-                /*create a DIV element for each matching element:*/
+                // Create a DIV element for each matching element:
                 b = document.createElement("DIV");
     
-                /*make the matching letters bold:*/
-                b.innerHTML = "<strong>" + arr[i].county.substr(0, val.length) + "</strong>";
-                b.innerHTML += arr[i].county.substr(val.length) + ", " + arr[i].state;
+                // Make the matching letters bold
+                b.innerHTML = "<strong>" + searchStr.substr(0, val.length) + "</strong>";
+                b.innerHTML += searchStr.substr(val.length);
     
-                /*insert a input field that will hold the current FIPS code:*/
+                // insert a input field that will hold the current FIPS code
                 b.innerHTML += "<input type='hidden' value='" + arr[i].FIPS + "'>";
     
-                /*execute a function when someone clicks on the item value (DIV element):*/
+                // Execute a function when someone clicks on the item value (DIV element)
                 b.addEventListener("click", function(e) {
-                    // insert the value for the autocomplete text field
                     inp.value = "";
                     document.getElementById("FIPS-input").value = this.getElementsByTagName("input")[0].value;
                     document.getElementById("FIPS-input").dispatchEvent(new Event('input'));
@@ -70,14 +70,18 @@ for(let i = 0; i < countiesData.features.length; i++) {
             countyJSON.push({"county": countiesData.features[i].properties.NAME + " " + 
                              LSAD.charAt(0).toUpperCase() + LSAD.slice(1), 
                              "state": statesData.features[j].properties.name,
-                             "FIPS": countiesData.features[i].properties.GEO_ID.slice(9)});
+                             "FIPS": countiesData.features[i].properties.GEO_ID.slice(9)
+            });
+
             break;
         }
     }
 }
 
+// Don't let the input search form to be submitted 
 document.getElementsByTagName("form")[0].addEventListener("submit", function(e) {
     e.preventDefault();
 });
 
+// Start the function
 autocomplete(document.getElementById("searchbarInput"), countyJSON);

@@ -37,6 +37,7 @@ function loadMap() {
         event.target.id == "searchbarInput" ?  map.dragging.disable() : map.dragging.enable();
     }
 
+    // When someone selects a county from the searchbar zoom in on the area
     document.getElementById("FIPS-input").addEventListener("input", function(e) {
         if(currSearch)
             currSearch.fireEvent('mouseout');
