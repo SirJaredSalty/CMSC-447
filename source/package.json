@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "http-server": "^14.0.0",
+    "requirejs": "^2.3.6"
+  },
+  "scripts": {
+    "start": "http-server HTML -a localhost -p 8000 -c-1"
+  }
+}

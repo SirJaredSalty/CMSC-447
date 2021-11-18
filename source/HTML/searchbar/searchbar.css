@@ -1,0 +1,53 @@
+#searchbar * {
+    box-sizing: border-box;
+}
+
+#searchbar {
+    width: 300px;
+    position: absolute;
+    background-color: red;
+    font: 16px Arial;
+    z-index: 999;  
+    right: 0px;
+}
+
+.autocomplete {
+    position: relative;
+    display: inline-block;
+}
+
+#searchbarInput {
+    border: 1px solid transparent;
+    background-color: #f1f1f1;
+    padding: 10px;
+    font-size: 16px;
+}
+
+#searchbarInput[type=text] {
+    background-color: #f1f1f1;
+    width: 100%;
+}
+
+#autocomplete-list {
+    position: absolute;
+    border: 1px solid #d4d4d4;
+    border-bottom: none;
+    border-top: none;
+    z-index: 99;
+    /* Position the autocomplete items to be the same width as the container */
+    top: 100%;
+    left: 0;
+    right: 0;
+}
+
+#autocomplete-list div {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #fff; 
+    border-bottom: 1px solid #d4d4d4; 
+}
+
+/* When hovering an item */
+#autocomplete-list div:hover {
+    background-color: #e9e9e9; 
+}
