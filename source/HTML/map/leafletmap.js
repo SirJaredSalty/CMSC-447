@@ -1,11 +1,13 @@
 import { statesData } from '../searchbar/StatesJS.js';
 import { countiesData } from '../searchbar/CountiesJS.js';
 
+// Global object variables for leaflet map manipulations
 var map = L.map('map').setView([37.8, -96], 4);
 var info = L.control();
 var geojson;
 var currSearch = null;
 
+// Loads the basic map structure
 function loadMap() {
     document.getElementsByClassName("leaflet-control-attribution leaflet-control")[0].remove();
 
@@ -17,22 +19,23 @@ function loadMap() {
         zoomOffset: -1
     }).addTo(map);
 
+    // Add home button
     L.easyButton('fa-crosshairs fa-lg', function() {
         map.setView([37.8, -96], 4);
     }).addTo(map);
 
+    // Load state outlines
     geojson = L.geoJson(statesData, {
         style: style
     }).addTo(map);
     
+    // Load county outlines
     geojson = L.geoJson(countiesData, {
         style: style,
         onEachFeature: onEachFeature
     }).addTo(map);
 
     // Disable dragging of the map if cursor is hovered over the searchbar
-    let mapDiv = document.getElementById("map");
-    mapDiv.appendChild(document.getElementById("searchbar"));
     document.onmousemove = function(event) {
         event.target.id == "searchbarInput" ?  map.dragging.disable() : map.dragging.enable();
     }
@@ -47,9 +50,17 @@ function loadMap() {
         layer.fireEvent('mouseover');
         currSearch = layer;
     });
+
+    // Close the stats menu when exit button is clicked
+    document.getElementById("exitStats").addEventListener("click", function(e) {
+        document.getElementById("countyStats").style.display = "none";
+    });
 }
 
+// Function relating to setting/changing the box displaying currently hovered county.
 function mapHover() {
+
+    // Initialize the bottom right box displaying current county hovered
     info.onAdd = function (map) {
         this._div = L.DomUtil.create('div', 'info', document.getElementsByClassName("leaflet-bottom leaflet-right")[0]);
         this.update();
@@ -57,6 +68,7 @@ function mapHover() {
         return this._div;
     };
 
+    // Update the current county being hovered
     info.update = function (props) {
         if(props) {
             let state = statesData.features.find(s => s.id == props.STATE);
@@ -73,6 +85,7 @@ function mapHover() {
     info.addTo(map);
 }
 
+// Styling of the state and county outlines/fill colors
 function style(feature) {
     return {
         weight: feature.properties.GEO_ID ? 0.7 : 1.7,
@@ -84,9 +97,13 @@ function style(feature) {
     };
 }
 
+// Function that keeps track is mouse is hovered over a county
 function highlightFeature(e) {
     var layer = e.target;
+    if(currSearch == layer)
+        currSearch = null;
 
+    // Set style of hovered county
     layer.setStyle({
         weight: 5,
         color: '#666',
@@ -98,47 +115,54 @@ function highlightFeature(e) {
         layer.bringToFront();
     }
 
+    // Call the update function to change the currently hovered county box
     info.update(layer.feature.properties);
 }
 
+// Function called when the mouse is no longer hovered on the current county
 function resetHighlight(e) {
     geojson.resetStyle(e.target);
     info.update();
+    if(currSearch)
+        currSearch.fireEvent('mouseover');
 }
 
-function zoomToFeature(e) {
-    map.fitBounds(e.target.getBounds(), {maxZoom: 6});
-    let FIPS = e.sourceTarget.feature.properties.GEO_ID.slice(9)
-    if(e.sourceTarget.feature.properties.GEO_ID) {
-        fetch(`http://127.0.0.1:5000/County/${FIPS}`, {method: 'GET'})
-        .then(response => {
-            if(response.status === 404) 
-                return Promise.reject("Error. No county FIPS found in database.");
-            else 
-                return response.json();
-        })
-        .then(data => {
-            let latestData = data[data.length - 4]
-            let strData = "Latest Date: " + latestData.date + "\n\nCounty & State: " + latestData.name + ", " + 
-                    latestData.state + "\n\nPopulation: " + latestData.population + "\n\nCases: " + latestData.cases + 
-                    "\n\nVaccines Initiated: " + latestData.vaccines_initiated + "\n\nVaccines Completed: " + latestData.vaccines_complete;
-            e.target.bindPopup(String(strData));
-        })
-        .catch(error => {
-            e.target.bindPopup(String(error));
-        });
-    }
+// Fetch backend county data
+function getCountyStats(FIPS) {
+    fetch(`http://127.0.0.1:5000/County/${FIPS}`, {method: 'GET'})
+    .then(response => {
+        if(response.status === 404) 
+            return Promise.reject("Error. No county FIPS found in database.");
+        else 
+            return response.json();
+    })
+    .then(data => {
+        let latestData = data[data.length - 4]
+        let strData = "Latest Date: " + latestData.date + "\n\nCounty & State: " + latestData.name + ", " + 
+                latestData.state + "\n\nPopulation: " + latestData.population + "\n\nCases: " + latestData.cases + 
+                "\n\nVaccines Initiated: " + latestData.vaccines_initiated + "\n\nVaccines Completed: " + latestData.vaccines_complete;
+        document.getElementById("statText").innerText = strData;
+    })
+    .catch(error => error);
 }
 
+// Each layer (a county outline on the map) can be moused over/out, and clicked for various events
 function onEachFeature(feature, layer) {
     layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
-        click: zoomToFeature
+        click: (e) => { 
+            map.fitBounds(e.target.getBounds(), {maxZoom: 6});
+            document.getElementById("countyStats").style.background = "red";
+            document.getElementById("countyStats").style.display = "block";
+            getCountyStats(feature.properties.GEO_ID.slice(9));
+            currSearch = layer;
+        }
     });
 
     layer._leaflet_id = feature.properties.GEO_ID.slice(9);
 }
 
+// Start script
 loadMap();
 mapHover();

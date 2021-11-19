@@ -1,7 +1,7 @@
 #map { 
     width: 800px; 
     height: 500px; 
-    z-index: 995;
+    z-index: 990;
 }
 
 .info { 
@@ -30,4 +30,27 @@
     float: left; 
     margin-right: 8px; 
     opacity: 0.7; 
+}
+
+#countyStats {
+    position: absolute;
+    display: none;
+    width: 700px;
+    height: 400px;
+    left: 50px;
+    top: 50px;
+    z-index: 995;
+}
+
+#exitStats {
+    position: absolute; 
+    left: 5px; 
+    top: 5px;
+    height: 25px;
+    width: 25px;
+}
+
+#statText {
+    position: absolute;
+    left: 100px
 }

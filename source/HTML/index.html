@@ -6,6 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -14,14 +15,21 @@
 </head>
 
 <body>
-    <div id='map'></div>
-    <div id = "searchbar">
-        <form autocomplete="off">
-            <div class="autocomplete" style="width:300px;">
-                <input id="FIPS-input" type="hidden">
-                <input id="searchbarInput" type="text" name="myCountry" placeholder="Search">
-            </div>
-        </form>
+    <div id='map'>
+        <div id = "searchbar">
+            <form autocomplete="off">
+                <div class="autocomplete" style="width:300px;">
+                    <input id="FIPS-input" type="hidden">
+                    <input id="searchbarInput" type="text" name="myCountry" placeholder="Search">
+                </div>
+            </form>
+        </div>
+        <div id = "countyStats">
+            <div id = "statText"></div>
+            <button id = "exitStats">
+                <i class = "glyphicon glyphicon-remove" style = "position: absolute; right:4px; top: 4px"></i>
+            </button>
+        </div>
     </div>
 
     <script type = "module" src = "./searchbar/searchbar.js"></script>
