@@ -6,7 +6,7 @@ import { countiesData } from '../searchbar/CountiesJS.js';
 var map = L.map('map').setView([37.8, -96], 4);
 var info = L.control();
 var geojson;
-var currCounty = null;
+var countyMarkers = {};
 
 // Loads the basic map structure with state and county geometry.
 // Also adds various event listeners.
@@ -16,7 +16,7 @@ function loadMap() {
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94' +
                 'IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
         maxZoom: 18,
-        id: 'mapbox/streets-v11',
+        id: 'mapbox/satellite-v9',
         tileSize: 512,
         zoomOffset: -1
     }).addTo(map);
@@ -99,9 +99,6 @@ function style(feature) {
 function highlightFeature(e) {
     var layer = e.target;
 
-    if(currCounty == layer)
-        currCounty = null;
-
     // Set style of hovered county
     layer.setStyle({
         weight: 5,
@@ -121,8 +118,7 @@ function highlightFeature(e) {
 
 // Function called when the mouse is no longer hovered on the current county
 function resetHighlight(e) {
-    if(currCounty != e.target)
-        geojson.resetStyle(e.target);
+    geojson.resetStyle(e.target);
     info.update();
 }
 
@@ -143,27 +139,43 @@ function getCountyStats(FIPS) {
                 "\n\nVaccines Initiated: " + latestData.vaccines_initiated + "\n\nVaccines Completed: " + latestData.vaccines_complete;
         document.getElementById("statText").innerText = strData;
     })
-    .catch(error => error);
+    .catch(error => {
+        document.getElementById("statText").innerText = error;
+    })
+    .finally(() => {
+        document.getElementById("countyStats").style.background = "red";
+        document.getElementById("countyStats").style.display = "block";
+    });
 }
 
 
-// When a county is clicked zoom in on it and open the dialog box
+// When a county is clicked zoom in on it and open the dialog box.
+// Also place down a marker where a county was clicked/searched.
 function openStats(e) {
+    let msg = e.target.feature.properties.NAME + " " + e.target.feature.properties.LSAD;
+    let FIPS = e.target.feature.properties.GEO_ID.slice(9);
+    let marker = new L.Marker(e.target.getBounds().getCenter());
+
+    // Add marker to map and zoom in
+    map.addLayer(marker);
+    marker.bindPopup(`<h5><b>${msg}</b></h5><button id = "marker${FIPS}">Delete marker</button>`).openPopup();
     map.fitBounds(e.target.getBounds(), {maxZoom: 6});
-    document.getElementById("countyStats").style.background = "red";
-    document.getElementById("countyStats").style.display = "block";
-    getCountyStats(e.target.feature.properties.GEO_ID.slice(9));
+    getCountyStats(FIPS);
 
-    // Un-highlight previously clicked county
-    if(currCounty) {
-        let oldLayer = currCounty;
-        currCounty = null;
-        oldLayer.fireEvent('mouseout');
-    }
+    // Remove marker from map if county already has a marker
+    if(countyMarkers[`marker${FIPS}`])
+        map.removeLayer(countyMarkers[`marker${FIPS}`]);
 
-    // Highlight the clicked county after dialog box opens
-    e.target.fireEvent("mouseover");
-    currCounty = e.target;
+    // Add marker property to countyMarkers object
+    countyMarkers[`marker${FIPS}`] = marker;
+
+    // Check if remove marker button is clicked
+    document.addEventListener("click", function(e) {
+        if(String(e.path[0].id).substr(0, 6) == "marker" && countyMarkers[String(e.path[0].id)]) {
+           map.removeLayer(countyMarkers[String(e.path[0].id)]);
+           delete countyMarkers[String(e.path[0].id)];
+        }
+    });
 }
 
 
