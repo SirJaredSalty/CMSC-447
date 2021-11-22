@@ -101,25 +101,3 @@ def GetCountyStats(FIPS):
 
     return json.dumps(jsonQuery)
 
-
-@County.route("/State/<string:FIPS>",  methods=['GET'])
-def GetState(FIPS):
-    db = get_db()
-
-    queryResult = db.execute("SELECT * FROM state WHERE fips = ?", (FIPS, )).fetchall()
-    if(len(queryResult) == 0):
-        return Response(status = 404)
-
-    jsonQuery = []
-    currDict = {}
-
-    # Convert the query to a JSON array
-    for result in queryResult:
-        currDict["fips"] = str(result[0])
-        currDict["name"] = result[1]
-        currDict["abbr"] = result[2]
-        jsonQuery.append(currDict.copy())
-        currDict.clear()
-
-    return json.dumps(jsonQuery)
-

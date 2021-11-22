@@ -7,7 +7,6 @@ var map = L.map('map').setView([37.8, -96], 4);
 var info = L.control();
 var geojson;
 var countyMarkers = {};
-var favorites = [];
 
 // Loads the basic map structure with state and county geometry.
 // Also adds various event listeners.
@@ -139,7 +138,7 @@ function getCountyStats(FIPS) {
     })
     .finally(() => {
         document.getElementsByClassName("editFav")[0].name = FIPS;
-        if(favorites.includes(FIPS))
+        if(document.getElementById("favorites").children.namedItem(FIPS))
             document.getElementsByClassName("editFav")[0].innerText = "Remove from favorites";
         else
             document.getElementsByClassName("editFav")[0].innerText = "Add to favorites";
@@ -202,14 +201,12 @@ function addToFavorites(e) {
     newFav.appendChild(newFavBtn);
     newFav.classList.add("savedFavs");
     document.getElementById("favorites").appendChild(newFav);
-    favorites.push(newFav.id);
     newFavBtn.addEventListener("click", (e) => removeFromFavorites(e));
 }
 
 
 // Remove a county to the favorites.
 function removeFromFavorites(e) {
-    favorites = favorites.filter(f => f != e.target.name);
     let removeFav = document.getElementById("favorites").children.namedItem(e.target.name);
     document.getElementById("favorites").removeChild(removeFav);
 }
@@ -220,16 +217,19 @@ document.onmousemove = function(event) {
     event.target.id == "searchbarInput" ?  map.dragging.disable() : map.dragging.enable();
 }
 
+
 // When someone selects a county from the searchbar zoom in on the area
 document.getElementById("FIPS-input").addEventListener("input", function(e) {            
     geojson.getLayer(e.target.value).fireEvent('click');
 });
+
 
 // Close the stats menu when exit button is clicked
 document.getElementById("exitStats").addEventListener("click", function(e) {
     document.getElementById("countyStats").style.display = "none";
     map.doubleClickZoom.enable();
 });
+
 
 // Close the favorites menu when exit button is clicked
 document.getElementById("exitFav").addEventListener("click", function(e) {
@@ -238,9 +238,10 @@ document.getElementById("exitFav").addEventListener("click", function(e) {
     map.doubleClickZoom.enable();
 });
 
+
 // Listen for when county is added/removed from favorites
 document.getElementsByClassName("editFav")[0].addEventListener("click", function(e) {
-    if(favorites.includes(e.target.name)) {
+    if(document.getElementById("favorites").children.namedItem(e.target.name)) {
         document.getElementsByClassName("editFav")[0].innerText = "Add to favorites";
         removeFromFavorites(e);
     }

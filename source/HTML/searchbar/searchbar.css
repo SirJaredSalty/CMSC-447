@@ -3,9 +3,8 @@
 }
 
 #searchbar {
-    width: 300px;
+    width: 20%;
     position: absolute;
-    background-color: red;
     font: 16px Arial;
     z-index: 999;  
     right: 0px;
@@ -14,9 +13,11 @@
 .autocomplete {
     position: relative;
     display: inline-block;
+    width: 100%;
 }
 
 #searchbarInput {
+    width: 100%;
     border: 1px solid transparent;
     background-color: #f1f1f1;
     padding: 10px;
