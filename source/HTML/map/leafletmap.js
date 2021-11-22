@@ -7,6 +7,7 @@ var map = L.map('map').setView([37.8, -96], 4);
 var info = L.control();
 var geojson;
 var countyMarkers = {};
+var favorites = [];
 
 // Loads the basic map structure with state and county geometry.
 // Also adds various event listeners.
@@ -21,9 +22,17 @@ function loadMap() {
         zoomOffset: -1
     }).addTo(map);
 
-    // Add home button
+    // Add a home button
     L.easyButton('fa-crosshairs fa-lg', function() {
         map.setView([37.8, -96], 4);
+    }).addTo(map);
+
+    // Add a favorites button
+    L.easyButton('fa-star fa-lg', function() {
+        document.getElementById("countyStats").style.display = "none";
+        document.getElementById('favorites').style.display = "block";
+        map.scrollWheelZoom.disable();
+        map.doubleClickZoom.disable();
     }).addTo(map);
 
     // Load state outlines
@@ -36,21 +45,6 @@ function loadMap() {
         style: style,
         onEachFeature: onEachFeature
     }).addTo(map);
-
-    // Disable dragging of the map if cursor is hovered over the searchbar
-    document.onmousemove = function(event) {
-        event.target.id == "searchbarInput" ?  map.dragging.disable() : map.dragging.enable();
-    }
-
-    // When someone selects a county from the searchbar zoom in on the area
-    document.getElementById("FIPS-input").addEventListener("input", function(e) {            
-        geojson.getLayer(e.target.value).fireEvent('click');
-    });
-
-    // Close the stats menu when exit button is clicked
-    document.getElementById("exitStats").addEventListener("click", function(e) {
-        document.getElementById("countyStats").style.display = "none";
-    });
 }
 
 
@@ -123,7 +117,8 @@ function resetHighlight(e) {
 }
 
 
-// Fetch backend county data depending on the FIPS
+// Fetch backend county data depending on the FIPS.
+// Sets the county pop up dialog to the stats found in backend.
 function getCountyStats(FIPS) {
     fetch(`http://127.0.0.1:5000/County/${FIPS}`, {method: 'GET'})
     .then(response => {
@@ -143,7 +138,13 @@ function getCountyStats(FIPS) {
         document.getElementById("statText").innerText = error;
     })
     .finally(() => {
-        document.getElementById("countyStats").style.background = "red";
+        document.getElementsByClassName("editFav")[0].name = FIPS;
+        if(favorites.includes(FIPS))
+            document.getElementsByClassName("editFav")[0].innerText = "Remove from favorites";
+        else
+            document.getElementsByClassName("editFav")[0].innerText = "Add to favorites";
+            
+        document.getElementById('favorites').style.display = "none";
         document.getElementById("countyStats").style.display = "block";
     });
 }
@@ -176,6 +177,8 @@ function openStats(e) {
            delete countyMarkers[String(e.path[0].id)];
         }
     });
+
+    map.doubleClickZoom.disable();
 }
 
 
@@ -189,6 +192,64 @@ function onEachFeature(feature, layer) {
 
     layer._leaflet_id = feature.properties.GEO_ID.slice(9);
 }
+
+
+// Add a county to the favorites.
+function addToFavorites(e) {
+    let newFav = e.path[1].children[0].cloneNode(true);
+    let newFavBtn = e.path[1].children[1].cloneNode(true);
+    newFav.id = e.target.name;
+    newFav.appendChild(newFavBtn);
+    newFav.classList.add("savedFavs");
+    document.getElementById("favorites").appendChild(newFav);
+    favorites.push(newFav.id);
+    newFavBtn.addEventListener("click", (e) => removeFromFavorites(e));
+}
+
+
+// Remove a county to the favorites.
+function removeFromFavorites(e) {
+    favorites = favorites.filter(f => f != e.target.name);
+    let removeFav = document.getElementById("favorites").children.namedItem(e.target.name);
+    document.getElementById("favorites").removeChild(removeFav);
+}
+
+
+// Disable dragging of the map if cursor is hovered over the searchbar
+document.onmousemove = function(event) {
+    event.target.id == "searchbarInput" ?  map.dragging.disable() : map.dragging.enable();
+}
+
+// When someone selects a county from the searchbar zoom in on the area
+document.getElementById("FIPS-input").addEventListener("input", function(e) {            
+    geojson.getLayer(e.target.value).fireEvent('click');
+});
+
+// Close the stats menu when exit button is clicked
+document.getElementById("exitStats").addEventListener("click", function(e) {
+    document.getElementById("countyStats").style.display = "none";
+    map.doubleClickZoom.enable();
+});
+
+// Close the favorites menu when exit button is clicked
+document.getElementById("exitFav").addEventListener("click", function(e) {
+    document.getElementById("favorites").style.display = "none";
+    map.scrollWheelZoom.enable();
+    map.doubleClickZoom.enable();
+});
+
+// Listen for when county is added/removed from favorites
+document.getElementsByClassName("editFav")[0].addEventListener("click", function(e) {
+    if(favorites.includes(e.target.name)) {
+        document.getElementsByClassName("editFav")[0].innerText = "Add to favorites";
+        removeFromFavorites(e);
+    }
+
+    else {
+        document.getElementsByClassName("editFav")[0].innerText = "Remove from favorites";
+        addToFavorites(e);
+    }
+});
 
 
 // Start script

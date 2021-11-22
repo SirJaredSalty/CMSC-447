@@ -32,8 +32,9 @@
     opacity: 0.7; 
 }
 
-#countyStats {
+#countyStats, #favorites {
     position: absolute;
+    background-color: aliceblue;
     display: none;
     width: 700px;
     height: 400px;
@@ -42,15 +43,36 @@
     z-index: 995;
 }
 
-#exitStats {
+#exitStats, #exitFav {
     position: absolute; 
-    left: 5px; 
-    top: 5px;
+    left: 8px; 
+    top: 8px;
     height: 25px;
     width: 25px;
 }
 
+.editFav {
+    position: absolute; 
+    right: 8px; 
+    top: 8px;
+    height: 25px;
+    width: auto;
+}
+
 #statText {
     position: absolute;
+    top: 50px;
     left: 100px
+}
+
+.savedFavs {
+    position: relative; 
+    padding: 20px;
+    left: 50px; 
+    margin-top: 5px;
+    margin-bottom: 5px;
+    height: 300px;
+    width: 600px;
+    border: 1px solid;
+    border-color: black;
 }
