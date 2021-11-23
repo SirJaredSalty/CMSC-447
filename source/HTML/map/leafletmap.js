@@ -29,7 +29,7 @@ function loadMap() {
     // Add a favorites button
     L.easyButton('fa-star fa-lg', function() {
         document.getElementById("countyStats").style.display = "none";
-        document.getElementById('favorites').style.display = "block";
+        document.getElementById('favorites').style.display = "flex";
         map.scrollWheelZoom.disable();
         map.doubleClickZoom.disable();
     }).addTo(map);
@@ -122,19 +122,23 @@ function getCountyStats(FIPS) {
     fetch(`http://127.0.0.1:5000/County/${FIPS}`, {method: 'GET'})
     .then(response => {
         if(response.status === 404) 
-            return Promise.reject("Error. No county FIPS found in database.");
+            return Promise.reject("<h1>Error. No county FIPS found in database.</h1>");
         else 
             return response.json();
     })
     .then(data => {
         let latestData = data[data.length - 4];
-        let strData = "Latest Date: " + latestData.date + "\n\nCounty & State: " + latestData.name + ", " + 
-                latestData.state + "\n\nPopulation: " + latestData.population + "\n\nCases: " + latestData.cases + 
-                "\n\nVaccines Initiated: " + latestData.vaccines_initiated + "\n\nVaccines Completed: " + latestData.vaccines_complete;
-        document.getElementById("statText").innerText = strData;
+
+        let strData = '<h1><b>' + latestData.name + ', ' + statesData.features.find(state => state.id == String(FIPS).substr(0, 2)).properties.name + '</b></h1><br>';
+        strData += '<h2 style = "display: inline-block"><b>Population</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + latestData.population + '</h2><br><br>';
+        strData += '<h2 style = "display: inline-block"><b>Cases</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + latestData.cases + '</h2><br><br>';
+        strData += '<h2 style = "display: inline-block"><b>Vaccines Initiated</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + latestData.vaccines_initiated + '</h2><br><br>';
+        strData += '<h2 style = "display: inline-block"><b>Vaccines Completed</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + latestData.vaccines_complete + '</h2><br><br>';
+        //"Latest Date: " + latestData.date
+        document.getElementById("statText").innerHTML = strData;
     })
     .catch(error => {
-        document.getElementById("statText").innerText = error;
+        document.getElementById("statText").innerHTML = error;
     })
     .finally(() => {
         document.getElementsByClassName("editFav")[0].name = FIPS;
@@ -144,7 +148,7 @@ function getCountyStats(FIPS) {
             document.getElementsByClassName("editFav")[0].innerText = "Add to favorites";
             
         document.getElementById('favorites').style.display = "none";
-        document.getElementById("countyStats").style.display = "block";
+        document.getElementById("countyStats").style.display = "flex";
     });
 }
 
@@ -195,8 +199,8 @@ function onEachFeature(feature, layer) {
 
 // Add a county to the favorites.
 function addToFavorites(e) {
-    let newFav = e.path[1].children[0].cloneNode(true);
-    let newFavBtn = e.path[1].children[1].cloneNode(true);
+    let newFav = e.path[1].children[2].cloneNode(true);
+    let newFavBtn = e.path[1].children[0].cloneNode(true);
     newFav.id = e.target.name;
     newFav.appendChild(newFavBtn);
     newFav.classList.add("savedFavs");
@@ -211,6 +215,35 @@ function removeFromFavorites(e) {
     document.getElementById("favorites").removeChild(removeFav);
 }
 
+
+// Listen for login button press.
+document.getElementById("loginBtn").addEventListener("click", (e) => {
+    fetch(`http://127.0.0.1:5000/login?username=${e.path[2][0].value}&password=${e.path[2][1].value}`, {method: 'GET'})
+    .then(response => {
+        if(response.status === 404) 
+            document.getElementById("formMsg").innerText = "Incorrect username/password";
+        else {
+            document.getElementById("login").style.display = "none";
+            document.getElementById("map").style.display = "flex";
+            map.invalidateSize();
+        }
+    });
+});
+
+
+// Listen for create account button press.
+document.getElementById("createAccBtn").addEventListener("click", (e) => {
+    fetch(`http://127.0.0.1:5000/login?username=${e.path[2][0].value}&password=${e.path[2][1].value}`, {method: 'POST'})
+    .then(response => {
+        if(response.status === 404) 
+            document.getElementById("formMsg").innerText = "Username already exists";
+        else {
+            document.getElementById("login").style.display = "none";
+            document.getElementById("map").style.display = "flex";
+            map.invalidateSize();
+        }
+    });
+});
 
 // Disable dragging of the map if cursor is hovered over the searchbar
 document.onmousemove = function(event) {

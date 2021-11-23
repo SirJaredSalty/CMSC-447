@@ -101,3 +101,33 @@ def GetCountyStats(FIPS):
 
     return json.dumps(jsonQuery)
 
+
+@County.route("/login",  methods=['GET'])
+def Login():
+    db = get_db()
+    
+    username = request.args.get('username')
+    password= request.args.get('password')
+
+    queryResult = db.execute("SELECT * FROM user WHERE username = ? AND password = ?", (username, password)).fetchall()
+    if(len(queryResult) == 0):
+        return Response(status = 404)
+
+    return Response(status = 200)
+
+
+@County.route("/login",  methods=['POST'])
+def CreateAccount():
+    db = get_db()
+    
+    username = request.args.get('username')
+    password= request.args.get('password')
+    
+    queryResult = db.execute("SELECT * FROM user WHERE username = ? AND [password] = ?", (username, password)).fetchall()
+    if(len(queryResult) > 0):
+        return Response(status = 404)
+
+    query = "INSERT INTO user (username, [password]) VALUES (?, ?)"
+    db.execute(query, (username, password))
+    db.commit()
+    return Response(status = 200)
