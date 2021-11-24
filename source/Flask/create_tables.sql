@@ -13,7 +13,13 @@ CREATE TABLE user (
 CREATE TABLE favorite (
   id INTEGER PRIMARY KEY,
   user_id INTEGER NOT NULL,
-  county_fips INTEGER NOT NULL,
+  county_fips TEXT NOT NULL,
+  [start_date] DATE NOT NULL,
+  end_date DATE NOT NULL, 
+  vaccines_initiated INTEGER,
+  vaccines_complete INTEGER,
+  cases INTEGER,
+  deaths INTEGER,
   FOREIGN KEY(user_id) REFERENCES user(id),
   FOREIGN KEY(county_fips) REFERENCES county(fips)
 );

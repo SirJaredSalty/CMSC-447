@@ -43,6 +43,9 @@ def InitializeDatabase():
 @County.route("/CountyStats",  methods=['POST'])
 def UpdateCountyStats():
     db = get_db()
+    
+    db.execute("DELETE FROM county_statistic")
+    db.commit()
 
     # Load county's Covid-19 statistics
     counties = db.execute("SELECT * FROM county").fetchall()
@@ -102,6 +105,70 @@ def GetCountyStats(FIPS):
     return json.dumps(jsonQuery)
 
 
+
+@County.route("/Favorites",  methods=['GET'])
+def GetFavorites():
+    db = get_db()
+
+    queryResult = db.execute("SELECT * FROM favorite INNER JOIN county ON favorite.county_fips = county.fips WHERE user_id = ?", (request.args.get('id'), )).fetchall()
+    if(len(queryResult) == 0):
+        return Response(status = 404)
+
+    jsonQuery = []
+    currDict = {}
+
+    # Convert the query to a JSON array
+    for result in queryResult:
+        currDict["fips"] = result[2]
+        currDict["start_date"] = str(result[3])
+        currDict["end_date"] = str(result[4])
+        currDict["vacc_init"] = result[5]
+        currDict["vacc_comp"] = result[6]
+        currDict["cases"] = result[7]
+        currDict["deaths"] = result[8]
+        currDict["name"] = result[10]
+        currDict["population"] = result[12]
+        jsonQuery.append(currDict.copy())
+        currDict.clear()
+
+    return json.dumps(jsonQuery)
+
+
+@County.route("/Favorites",  methods=['POST'])
+def AddFavorites():
+    db = get_db()
+    
+    id = request.args.get('id')
+    fips = request.args.get('fips')
+    start = request.args.get('start')
+    end = request.args.get('end')
+    init = request.args.get('init')
+    comp = request.args.get('comp')
+    cases = request.args.get('cases')
+    deaths = request.args.get('deaths')
+
+    query = "INSERT INTO favorite (user_id, county_fips, [start_date], end_date, vaccines_initiated, vaccines_complete, cases, deaths) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    db.execute(query, (id, fips, start, end, init, comp, cases, deaths))
+    db.commit()
+
+    return Response(status = 200)
+
+
+@County.route("/Favorites",  methods=['DELETE'])
+def DeleteFavorites():
+    db = get_db()
+    
+    id = request.args.get('id')
+    fips = request.args.get('fips')
+    start = request.args.get('start')
+    end = request.args.get('end')
+
+    db.execute("DELETE FROM favorite WHERE user_id = ? AND county_fips = ? AND [start_date] = ? AND end_date = ?", (id, fips, start, end)).fetchall()
+    db.commit()
+
+    return Response(status = 200)
+
+
 @County.route("/login",  methods=['GET'])
 def Login():
     db = get_db()
@@ -109,11 +176,11 @@ def Login():
     username = request.args.get('username')
     password= request.args.get('password')
 
-    queryResult = db.execute("SELECT * FROM user WHERE username = ? AND password = ?", (username, password)).fetchall()
+    queryResult = db.execute("SELECT id FROM user WHERE username = ? AND password = ?", (username, password)).fetchall()
     if(len(queryResult) == 0):
         return Response(status = 404)
 
-    return Response(status = 200)
+    return json.dumps({"id": queryResult[0][0]})
 
 
 @County.route("/login",  methods=['POST'])
@@ -124,10 +191,12 @@ def CreateAccount():
     password= request.args.get('password')
     
     queryResult = db.execute("SELECT * FROM user WHERE username = ? AND [password] = ?", (username, password)).fetchall()
-    if(len(queryResult) > 0):
+    if(len(queryResult) > 0 or username == ""):
         return Response(status = 404)
 
     query = "INSERT INTO user (username, [password]) VALUES (?, ?)"
     db.execute(query, (username, password))
     db.commit()
-    return Response(status = 200)
+    
+    queryResult = db.execute("SELECT id FROM user WHERE username = ? AND password = ?", (username, password)).fetchall()
+    return json.dumps({"id": queryResult[0][0]})
