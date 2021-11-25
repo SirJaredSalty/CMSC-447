@@ -84,6 +84,7 @@ input[type = "date"] {
     background-color: aliceblue;
     display: none;
     width: 80%;
+    height: 75%;
     z-index: 995;
 }
 
@@ -113,6 +114,9 @@ input[type = "date"] {
     width: 80%;
     height: auto;
     margin: auto;
+    padding: 20px;
+    border: 1px solid;
+    border-color: black;
 }
 
 .savedFavs {
