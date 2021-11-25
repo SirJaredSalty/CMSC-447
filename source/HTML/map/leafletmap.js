@@ -75,6 +75,8 @@ function setUpDatePicker() {
 
     let maxLabel = document.createElement("label");
     let minLabel = document.createElement("label");
+    maxLabel.style.color = "red";
+    minLabel.style.color = "red";
     let br = document.createElement("br");
     let dateForm = document.createElement("form");
     dateForm.style.display = "flex";
@@ -229,13 +231,13 @@ function loadUserFavorites() {
             document.getElementById("favorites").appendChild(newFav);
             newFavBtn.addEventListener("click", (e) => removeFromFavorites(e));
 
-            let strData = '<h1><b>' + data[i].name + ', ' + statesData.features.find(state => state.id == String(data[i]['fips']).substr(0, 2)).properties.name + '</b></h1><br>';
-            strData += '<h2 style = "display: inline-block"><b>Population</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['population'] + '</h2><br><br>';
-            strData += '<h2 style = "display: inline-block"><b>Cases</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['cases'] + '</h2><br><br>';
-            strData += '<h2 style = "display: inline-block"><b>Vaccines Initiated</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['vacc_init'] + '</h2><br><br>';
-            strData += '<h2 style = "display: inline-block"><b>Vaccines Completed</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['vacc_comp'] + '</h2><br><br>';
-            strData += '<h2 style = "display: inline-block"><b>Deaths</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['deaths'] + '</h2><br><br>';
-            strData += '<h2 style = "display: inline-block"><b>Start Date</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['start_date'] + '</h2><br><br>';
+            let strData = '<h1><b>' + data[i].name + ', ' + statesData.features.find(state => state.id == String(data[i]['fips']).substr(0, 2)).properties.name + '</b></h1>';
+            strData += '<h2 style = "display: inline-block"><b>Population</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['population'] + '</h2><br>';
+            strData += '<h2 style = "display: inline-block"><b>Cases</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['cases'] + '</h2><br>';
+            strData += '<h2 style = "display: inline-block"><b>Vaccines Initiated</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['vacc_init'] + '</h2><br>';
+            strData += '<h2 style = "display: inline-block"><b>Vaccines Completed</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['vacc_comp'] + '</h2><br>';
+            strData += '<h2 style = "display: inline-block"><b>Deaths</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['deaths'] + '</h2><br>';
+            strData += '<h2 style = "display: inline-block"><b>Start Date</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['start_date'] + '</h2><br>';
             strData += '<h2 style = "display: inline-block"><b>End Date</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + data[i]['end_date'] + '</h2><br><br>';
             newFav.innerHTML = strData;
             newFav.appendChild(newFavBtn);
@@ -279,13 +281,13 @@ function getCountyStats(FIPS) {
         countyData[2] = cases;        
         countyData[3] = deaths;
 
-        let strData = '<h1><b>' + dataRange[0].name + ', ' + statesData.features.find(state => state.id == String(FIPS).substr(0, 2)).properties.name + '</b></h1><br>';
-        strData += '<h2 style = "display: inline-block"><b>Population</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + dataRange[0].population + '</h2><br><br>';
-        strData += '<h2 style = "display: inline-block"><b>Cases</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + cases + '</h2><br><br>';
-        strData += '<h2 style = "display: inline-block"><b>Vaccines Initiated</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + initiated + '</h2><br><br>';
-        strData += '<h2 style = "display: inline-block"><b>Vaccines Completed</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + completed + '</h2><br><br>';
-        strData += '<h2 style = "display: inline-block"><b>Deaths</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + deaths + '</h2><br><br>';
-        strData += '<h2 style = "display: inline-block"><b>Start Date</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + minDate.value + '</h2><br><br>';
+        let strData = '<h1><b>' + dataRange[0].name + ', ' + statesData.features.find(state => state.id == String(FIPS).substr(0, 2)).properties.name + '</b></h1>';
+        strData += '<h2 style = "display: inline-block"><b>Population</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + dataRange[0].population + '</h2><br>';
+        strData += '<h2 style = "display: inline-block"><b>Cases</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + cases + '</h2><br>';
+        strData += '<h2 style = "display: inline-block"><b>Vaccines Initiated</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + initiated + '</h2><br>';
+        strData += '<h2 style = "display: inline-block"><b>Vaccines Completed</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + completed + '</h2><br>';
+        strData += '<h2 style = "display: inline-block"><b>Deaths</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + deaths + '</h2><br>';
+        strData += '<h2 style = "display: inline-block"><b>Start Date</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + minDate.value + '</h2><br>';
         strData += '<h2 style = "display: inline-block"><b>End Date</b>:</h2>&nbsp&nbsp<h2 style = "display: inline-block">' + maxDate.value + '</h2><br><br>';
         document.getElementById("statText").innerHTML = strData;
     })

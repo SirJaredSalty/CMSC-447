@@ -8,7 +8,7 @@ body {
 } 
 
 input[type = "date"] {
-    height: 125px;
+    height: 50px;
 }
 
 #datePicker * {
@@ -84,7 +84,6 @@ input[type = "date"] {
     background-color: aliceblue;
     display: none;
     width: 80%;
-    height: 80%;
     z-index: 995;
 }
 
@@ -98,7 +97,7 @@ input[type = "date"] {
     left: 8px; 
     top: 8px;
     height: 25px;
-    width: 25px;
+    width: 50px;
 }
 
 .editFav {
@@ -112,9 +111,8 @@ input[type = "date"] {
 #statText {
     position: relative;
     width: 80%;
-    height: 80%;
+    height: auto;
     margin: auto;
-    top: 5%;
 }
 
 .savedFavs {
