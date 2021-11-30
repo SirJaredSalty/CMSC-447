@@ -40,7 +40,7 @@ def InitializeDatabase():
     return Response(status = 200)
 
 
-@County.route("/CountyStats",  methods=['POST'])
+@County.route("/UpdateStats",  methods=['GET'])
 def UpdateCountyStats():
     db = get_db()
     
@@ -52,7 +52,7 @@ def UpdateCountyStats():
     for i in range (len(counties)):
         county_fips = str(counties[i]['fips'])
         stat = db.execute("SELECT * FROM county_statistic where county_fips = ?", (county_fips, )).fetchall()
-        print(i, county_fips)
+        print(i)
 
         if len(stat) == 0:
             url = "https://api.covidactnow.org/v2/county/" + county_fips + ".timeseries.json?apiKey=e4071d45fd8647babcc6be35102ae515"
