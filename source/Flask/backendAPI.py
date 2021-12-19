@@ -190,7 +190,7 @@ def CreateAccount():
     username = request.args.get('username')
     password= request.args.get('password')
     
-    queryResult = db.execute("SELECT * FROM user WHERE username = ? AND [password] = ?", (username, password)).fetchall()
+    queryResult = db.execute("SELECT * FROM user WHERE username = ?", (username,)).fetchall()
     if(len(queryResult) > 0 or username == ""):
         return Response(status = 404)
 
